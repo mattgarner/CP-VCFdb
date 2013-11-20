@@ -500,5 +500,129 @@ sub update_variant {
 }
 
 
+#================== sample_variant functions =========================
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub add_sample_variant {
+  my ($ssid, $vid, $depth, $AAF, $quality) = @_;
+
+  if ( ! $ssid ) { 
+    print STDERR "add_sample_variant: No sample_sequence id provided\n";
+    return -1;
+  }
+
+  if ( ! $vid ) { 
+    print STDERR "add_sample_variant: No variant id provided\n";
+    return -2;
+  }
+
+  if ( ! $depth ) { 
+    print STDERR "add_sample_variant: No depth provided\n";
+    return -3;
+  }
+
+  if ( ! $AAF ) { 
+    print STDERR "add_sample_variant: No Alternative Allele Freq (AAF) provided\n";
+    return -4;
+  }
+
+  if ( ! $quality ) { 
+    print STDERR "add_sample_variant: No quality provided\n";
+    return -5;
+  }
+
+  my $ss_name = fetch_sample_sequence_name($ssid);
+  if ( ! $ss_name  ) {
+    print STDERR "add_sample_variant: Unknown sequence_sample-id $ssid $ss_name\n";
+    return -6;
+  }
+
+  my $v_hash = fetch_variant_hash($vid);
+  if ( ! $v_hash || keys %{$v_hash} == 0) {
+    print STDERR "add_sample_variant: Unknown variant-id $vid $v_hash\n";
+    return -7;
+  }
+
+  
+  my $sv_hash = fetch_sample_variant_hash( $ssid, $vid );
+  return 1 if ( $sv_hash && keys %{$sv_hash} > 0 );
+
+  my %call_hash = ( ssid    => $ssid,
+		    vid     => $vid,
+		    depth   => $depth,
+		    AAF     => $AAF,
+		    quality => $quality);
+
+
+  return (EASIH::DB::insert($dbi, "sample_variant", \%call_hash));
+}
+
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub fetch_sample_variant_hash {
+  my ($ssid,  $vid ) = @_;
+  if ( ! $vid || ! $ssid ) { 
+    print STDERR "fetch_sample_variant_hash: No variant and/or sample-sequence id provided\n";
+    return {};
+  }
+  my $q    = "SELECT * FROM sample_variant WHERE ssid = ? AND vid = ?";
+  my $sth  = EASIH::DB::prepare($dbi, $q);
+  return( EASIH::DB::fetch_hash( $dbi, $sth, $ssid, $vid ));
+}
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub update_sample_variant {
+  my ($ssid, $vid, $depth, $AAF, $quality) = @_;
+
+
+  if ( ! $ssid ) { 
+    print STDERR "add_sample_variant: No sample_sequence id provided\n";
+    return -1;
+  }
+
+  if ( ! $vid ) { 
+    print STDERR "add_sample_variant: No variant id provided\n";
+    return -2;
+  }
+
+  my $ss_name = fetch_sample_sequence_name($ssid);
+  if ( ! $ss_name  ) {
+    print STDERR "add_sample_variant: Unknown sequence_sample-id $ssid $ss_name\n";
+    return -3;
+  }
+
+  my $v_hash = fetch_variant_hash($vid);
+  if ( ! $v_hash || keys %{$v_hash} == 0) {
+    print STDERR "add_sample_variant: Unknown variant-id $vid $v_hash\n";
+    return -4;
+  }
+
+  my $sv_hash = fetch_sample_variant_hash( $ssid, $vid );
+  if ( !$sv_hash || keys %{$sv_hash} == 0 ) {
+    print "update_sample_variant: unknown entry\n";
+    return -5;
+  }
+
+
+  my %call_hash;
+  $call_hash{ssid}       = $ssid    if ( $ssid    );
+  $call_hash{vid}        = $vid     if ( $vid     );
+  $call_hash{depth}      = $depth   if ( $depth   );
+  $call_hash{AAF}        = $AAF     if ( $AAF     );
+  $call_hash{quality}    = $quality if ( $quality );
+
+  return (EASIH::DB::update($dbi, "sample_variant", \%call_hash, "ssid", "vid"));
+}
+
+
 
 1;

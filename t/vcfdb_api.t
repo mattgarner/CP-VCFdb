@@ -47,9 +47,9 @@ my $dbhost = 'mgsrv01';
 my $rand_dbname = "VCFdb_test";
 print "Database name :: $rand_dbname\n";
 
-use Test::More tests => 41;
+use Test::More tests => 66;
 
-open( *STDERR, ">/dev/null");
+#open( *STDERR, ">/dev/null");
 
 print "Drop old test database\n";
 EASIH::DB::drop_db($rand_dbname, $dbhost, "easih_admin", "easih");
@@ -300,5 +300,59 @@ ok($$v_hash{vid}        == $vid &&
    $$v_hash{alt}        eq $v_alt &&
    $$v_hash{comment}    eq $v_comment &&
    $$v_hash{annotation} eq $v_annotation, "fetched and checked variant hash by variant id (added data)");
+
+
+
+# ====================== SAMPLE_VARIANT ===============================
+
+my $sv_depth   = 99;
+my $sv_AAF     = 0.51;
+my $sv_quality = 1001;
+
+my $svid = CTRU::VCFdb::add_sample_variant();
+ok($svid == -1, "Check for provided sample-sequence id when inserting a sample-variant");
+
+$svid = CTRU::VCFdb::add_sample_variant($ssid, );
+ok($svid == -2, "Check for provided variant id when inserting a sample-variant");
+
+$svid = CTRU::VCFdb::add_sample_variant($ssid, $vid);
+ok($svid == -3, "Check for provided depth when inserting a sample-variant");
+
+$svid = CTRU::VCFdb::add_sample_variant($ssid, $vid, $sv_depth);
+ok($svid == -4, "Check for provided AAF when inserting a sample-variant");
+
+$svid = CTRU::VCFdb::add_sample_variant($ssid, $vid, $sv_depth, $sv_AAF);
+ok($svid == -5, "Check for provided quality when inserting a sample-variant");
+
+$svid = CTRU::VCFdb::add_sample_variant($ssid, $vid, $sv_depth, $sv_AAF, $sv_quality);
+ok($svid == -100, "Check for add a sample-variant with correct parameters");
+my $sv_hash = CTRU::VCFdb::fetch_sample_variant_hash($ssid, $vid);
+
+ok($$sv_hash{ssid}    == $ssid &&
+   $$sv_hash{vid}     == $vid &&
+   $$sv_hash{depth}   eq $sv_depth &&
+   $$sv_hash{AAF}     eq $sv_AAF &&
+   $$sv_hash{quality} eq $sv_quality, "fetched and checked sample-variant hash by sample-variant id (added data)");
+
+my $sv_hash = CTRU::VCFdb::fetch_sample_variant_hash();
+ok(!keys %$sv_hash, "fetched sample-variant hash by sample-variant id, with no sequence-sample id");
+
+my $sv_hash = CTRU::VCFdb::fetch_sample_variant_hash($ssid);
+ok(!keys %$sv_hash, "fetched sample-variant hash by sample-variant id, with no variant id");
+
+$sv_depth   = 999;
+$sv_AAF     = 0.11;
+$sv_quality = 11;
+
+
+$f_vid = CTRU::VCFdb::update_sample_variant($ssid, $vid, $sv_depth, $sv_AAF, $sv_quality);
+ok($vid eq $f_vid, "update sample-variant, persistent id");
+
+$sv_hash = CTRU::VCFdb::fetch_sample_variant_hash($ssid, $vid);
+ok($$sv_hash{ssid}    == $ssid &&
+   $$sv_hash{vid}     == $vid &&
+   $$sv_hash{depth}   eq $sv_depth &&
+   $$sv_hash{AAF}     eq $sv_AAF &&
+   $$sv_hash{quality} eq $sv_quality, "fetched and checked sample-variant hash by sample-variant id (updated data)");
 
 

@@ -264,7 +264,7 @@ sub insert {
   
   my $execute_value = $sth->execute(@values) || die $DBI::errstr;
 
-  return $sth->{mysql_insertid} ||  -1;
+  return $sth->{mysql_insertid} ||  -100;
 }
 
 

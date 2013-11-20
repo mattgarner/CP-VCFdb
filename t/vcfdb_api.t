@@ -228,3 +228,77 @@ ok($$r_hash{rid}   == $rid &&
    $$r_hash{end}   == 32899321, "fetched and checked region hash by region id (updated data)");
 
 
+
+# ====================== VARIANT ===============================
+
+my $v_chr   = 13;
+my $v_pos   = 32890598;
+my $v_ref   = "A";
+my $v_alt   = "TT";
+my $v_comment   = "Common Poly";
+my $v_annotation = "BRCA2 mutation!";
+
+my $vid = CTRU::VCFdb::add_variant();
+ok($vid == -1, "Check for provided chr when inserting a variant");
+
+$vid = CTRU::VCFdb::add_variant($v_chr, );
+ok($vid == -2, "Check for provided position when inserting a variant");
+
+$vid = CTRU::VCFdb::add_variant($v_chr, $v_pos );
+ok($vid == -3, "Check for provided reference base(s) when inserting a variant");
+
+$vid = CTRU::VCFdb::add_variant($v_chr, $v_pos, $v_ref);
+ok($vid == -4, "Check for provided alternative base(s) when inserting a variant");
+
+$vid = CTRU::VCFdb::add_variant($v_chr, $v_pos, $v_ref, $v_alt, $v_comment, $v_annotation);
+ok($vid == 1, "Check for add a variant with correct parameters");
+my $v_hash = CTRU::VCFdb::fetch_variant_hash($vid);
+
+ok($$v_hash{vid}        == $vid &&
+   $$v_hash{chr}        == $v_chr &&
+   $$v_hash{pos}        eq $v_pos &&
+   $$v_hash{ref}        eq $v_ref &&
+   $$v_hash{alt}        eq $v_alt &&
+   $$v_hash{comment}    eq $v_comment &&
+   $$v_hash{annotation} eq $v_annotation, "fetched and checked variant hash by variant id (added data)");
+
+my $f_vid = CTRU::VCFdb::fetch_variant_id(  );
+ok($f_vid == -1, "fetch variant id, with no chr ");
+
+$f_vid = CTRU::VCFdb::fetch_variant_id( $v_chr, );
+ok($f_vid == -1, "fetch variant id, with no position ");
+
+$f_vid = CTRU::VCFdb::fetch_variant_id( $v_chr, $v_pos,  );
+ok($f_vid == -1, "fetch variant id, with no reference ");
+
+$f_vid = CTRU::VCFdb::fetch_variant_id( $v_chr, $v_pos, $v_ref, );
+ok($f_vid == -1, "fetch variant id, with no alternative ");
+
+$f_vid = CTRU::VCFdb::fetch_variant_id( $v_chr, $v_pos, $v_ref, $v_alt );
+ok($vid eq $f_vid, "fetch variant name by id, with an id");
+
+$v_chr   = 15;
+$v_pos   = 32890;
+$v_ref   = "AAAAAAAAA";
+$v_alt   = "GG";
+$v_comment   = "Pathogenic";
+$v_annotation = "BRCA1 mutation!";
+
+
+$f_vid = CTRU::VCFdb::update_variant($vid, $v_chr, $v_pos, $v_ref, $v_alt, $v_comment, $v_annotation);
+ok($vid eq $f_vid, "update variant, persistent id");
+
+$v_hash = CTRU::VCFdb::fetch_variant_hash();
+ok(!keys %$v_hash, "fetched variant hash by variant id, with no id");
+
+$v_hash = CTRU::VCFdb::fetch_variant_hash($vid);
+
+ok($$v_hash{vid}        == $vid &&
+   $$v_hash{chr}        == $v_chr &&
+   $$v_hash{pos}        eq $v_pos &&
+   $$v_hash{ref}        eq $v_ref &&
+   $$v_hash{alt}        eq $v_alt &&
+   $$v_hash{comment}    eq $v_comment &&
+   $$v_hash{annotation} eq $v_annotation, "fetched and checked variant hash by variant id (added data)");
+
+

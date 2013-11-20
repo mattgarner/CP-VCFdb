@@ -397,5 +397,108 @@ sub update_region {
 }
 
 
+#================== variant functions =========================
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub add_variant {
+  my ($chr, $pos, $ref, $alt, $comment, $annotation) = @_;
+
+  if ( ! $chr ) { 
+    print STDERR "add_variant: No chr provided\n";
+    return -1;
+  }
+
+  if ( ! $pos ) { 
+    print STDERR "add_variant: No variant position provided\n";
+    return -2;
+  }
+
+  if ( ! $ref ) { 
+    print STDERR "add_variant: No variant ref base(s) provided\n";
+    return -3;
+  }
+
+  if ( ! $alt ) { 
+    print STDERR "add_variant: No variant alt base(s) provided\n";
+    return -4;
+  }
+
+  
+  my $vid = fetch_variant_id( $chr, $pos, $ref, $alt );
+  return $vid if ( $vid );
+     
+  my %call_hash = ( chr  => $chr,
+		    pos  => $pos,
+		    ref  => $ref,
+		    alt  => $alt);
+
+  $call_hash{ comment   } = $comment     if ( $comment    );
+  $call_hash{ annotation } = $annotation if ( $annotation );
+
+  return (EASIH::DB::insert($dbi, "variant", \%call_hash));
+}
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub fetch_variant_id {
+  my ( $chr, $pos, $ref, $alt ) = @_;
+
+  if ( ! $chr || !$pos || !$ref || ! $alt ) { 
+    print STDERR "fetch_variant_id: requires 4 paramters: chr, pos, ref and alt\n";
+    return -1;
+  }
+
+  my $q    = "SELECT vid FROM variant WHERE chr = ? AND pos = ? AND ref = ? AND alt = ?";
+  my $sth  = EASIH::DB::prepare($dbi, $q);
+  my @line = EASIH::DB::fetch_array( $dbi, $sth, $chr, $pos, $ref, $alt );
+  return $line[0] || undef;
+}
+
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub fetch_variant_hash {
+  my ( $vid ) = @_;
+  if ( ! $vid ) { 
+    print STDERR "fetch_variant_hash: No variant id provided\n";
+    return {};
+  }
+  my $q    = "SELECT * FROM variant WHERE vid = ?";
+  my $sth  = EASIH::DB::prepare($dbi, $q);
+  return( EASIH::DB::fetch_hash( $dbi, $sth, $vid ));
+}
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub update_variant {
+  my ($vid, $chr, $pos, $ref, $alt, $comment, $annotation) = @_;
+
+  if ( ! $vid ) { 
+    print STDERR "update_variant: No variant id provided\n";
+    return -1;
+  }
+
+  my %call_hash;
+  $call_hash{vid}        = $vid        if ( $vid        );
+  $call_hash{chr}        = $chr        if ( $chr        );
+  $call_hash{pos}        = $pos        if ( $pos        );
+  $call_hash{ref}        = $ref        if ( $ref        );
+  $call_hash{alt}        = $alt        if ( $alt        );
+  $call_hash{comment}    = $comment    if ( $comment    );
+  $call_hash{annotation} = $annotation if ( $annotation );
+
+  return (EASIH::DB::update($dbi, "variant", \%call_hash, "vid"));
+}
+
+
 
 1;

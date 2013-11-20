@@ -34,14 +34,13 @@ CREATE TABLE variant (
 
   vid                 INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   chr                 VARCHAR(8) NOT NULL ,
-  start               INT NOT NULL,
-  end                 INT NOT NULL,
+  pos		      INT NOT NULL,
   ref                 VARCHAR(100) NOT NULL ,
   alt                 VARCHAR(100) NOT NULL ,
   comment	      VARCHAR(200),
   annotation	      VARCHAR(500),
 
-  KEY pos_idx  (chr, start, end)
+  KEY pos_idx  (chr, pos, ref, alt)
 );
 
 

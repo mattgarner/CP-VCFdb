@@ -74,10 +74,16 @@ my $sample_name = "C010001";
 $sid = CTRU::VCFdb::add_sample( $sample_name );
 ok($sid == 1, "Add sample to database");
 
-my $f_sample_name = CTRU::VCFdb::fetch_sample_name( $sid );
+my $f_sample_name = CTRU::VCFdb::fetch_sample_name(  );
+ok($f_sample_name eq "", "fetch sample name by sample id, no id");
+
+$f_sample_name = CTRU::VCFdb::fetch_sample_name( $sid );
 ok($sample_name eq $f_sample_name, "fetch sample name by sample id");
 
-my $f_sample_id = CTRU::VCFdb::fetch_sample_id( $sample_name );
+my $f_sample_id = CTRU::VCFdb::fetch_sample_id(  );
+ok($f_sample_id eq -1, "fetch sample id by sample name, no name");
+
+$f_sample_id = CTRU::VCFdb::fetch_sample_id( $sample_name );
 ok($sid eq $f_sample_id, "fetch sample id by sample name");
 
 $sample_name = "C010002";
@@ -98,10 +104,16 @@ my $plate_name = "CP0001";
 $pid = CTRU::VCFdb::add_plate( $plate_name );
 ok($pid == 1, "Add plate to database");
 
-my $f_plate_name = CTRU::VCFdb::fetch_plate_name( $pid );
+my $f_plate_name = CTRU::VCFdb::fetch_plate_name(  );
+ok($f_plate_name eq "", "fetch plate name by plate id, no plate name");
+
+$f_plate_name = CTRU::VCFdb::fetch_plate_name( $pid );
 ok($plate_name eq $f_plate_name, "fetch plate name by plate id");
 
-my $f_plate_id = CTRU::VCFdb::fetch_plate_id( $plate_name );
+my $f_plate_id = CTRU::VCFdb::fetch_plate_id(  );
+ok($f_plate_id == -1, "fetch plate id by plate name, no plate id");
+
+$f_plate_id = CTRU::VCFdb::fetch_plate_id( $plate_name );
 ok($pid eq $f_plate_id, "fetch plate id by plate name");
 
 $plate_name = "CP0002";
@@ -110,5 +122,56 @@ ok($pid eq $f_plate_id, "update plate, persistent id");
 
 $f_plate_name = CTRU::VCFdb::fetch_plate_name( $f_plate_id );
 ok($plate_name eq $f_plate_name, "fetched updated plate name by plate id");
+
+
+# ====================== Sample_sequence ===============================
+
+my $ss_name = "C010001_A";
+
+my $ssid = CTRU::VCFdb::add_sample_sequence();
+ok($ssid == -1, "Check for provided sid name when inserting a sample sequence");
+
+$ssid = CTRU::VCFdb::add_sample_sequence($sid, );
+ok($ssid == -2, "Check for provided pid name when inserting a sample sequence");
+
+$ssid = CTRU::VCFdb::add_sample_sequence($sid, $pid);
+ok($ssid == -3, "Check for provided name when inserting a sample sequence");
+
+$ssid = CTRU::VCFdb::add_sample_sequence(99, $pid, $ss_name);
+ok($ssid == -4, "Check for provided valid sid when inserting a sample sequence");
+
+$ssid = CTRU::VCFdb::add_sample_sequence($sid, 99, $ss_name);
+ok($ssid == -5, "Check for provided valid pid when inserting a sample sequence");
+
+$ssid = CTRU::VCFdb::add_sample_sequence($sid, $pid, $ss_name);
+ok($ssid == 1, "Check for add a sample_sequence with correct parameters");
+
+my $f_ss_name = CTRU::VCFdb::fetch_sample_sequence_name(  );
+ok($f_ss_name eq "", "fetch sample sequence name by id, with no id");
+
+$f_ss_name = CTRU::VCFdb::fetch_sample_sequence_name( $ssid );
+ok($f_ss_name eq $ss_name, "fetch sample sequence name by id, with an id");
+
+my $f_ssid = CTRU::VCFdb::fetch_sample_sequence_id(  );
+ok($f_ssid == -1, "fetch sample sequence id by name, with no id");
+
+$f_ssid = CTRU::VCFdb::fetch_sample_sequence_id( $ss_name );
+ok($f_ssid == $ssid, "fetch sample sequence id by name, with an id");
+
+$ss_name = "C010001_ABC";
+$f_ssid = CTRU::VCFdb::update_sample_sequence( $ssid, $ss_name );
+ok($ssid eq $f_ssid, "update sample_sequence, persistent id");
+
+$f_ss_name = CTRU::VCFdb::fetch_sample_sequence_name( $ssid );
+ok($ss_name eq $f_ss_name, "fetched updated sample sequence  name by sample_sequence id");
+
+my $ss_hash = CTRU::VCFdb::fetch_sample_sequence_hash();
+ok(!keys %$ss_hash, "fetched sample sequence hash by sample_sequence id, with no id");
+
+$ss_hash = CTRU::VCFdb::fetch_sample_sequence_hash($ssid);
+ok($$ss_hash{ssid} == 1 &&
+   $$ss_hash{sid} == 1 &&
+   $$ss_hash{pid} == 1 &&
+   $$ss_hash{name} eq $ss_name, "fetched and checked sample sequence hash by sample_sequence id");
 
 

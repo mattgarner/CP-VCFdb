@@ -180,7 +180,126 @@ sub update_plate {
   return (EASIH::DB::update($dbi, "plate", \%call_hash, "pid"));
 }
 
+#================== Sample_sequence functions =========================
 
-#------
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub add_sample_sequence {
+  my ($sid, $pid, $name) = @_;
+
+  if ( ! $sid ) { 
+    print STDERR "add_sample_sequence: No sample-id provided\n";
+    return -1;
+  }
+
+  if ( ! $pid ) { 
+    print STDERR "add_sample_sequence: No plate-id provided\n";
+    return -2;
+  }
+
+  if ( ! $name ) { 
+    print STDERR "add_sample_sequence: No sample_sequence name provided\n";
+    return -3;
+  }
+
+  my $s_name = fetch_sample_name($sid);
+  if ( ! $s_name ) {
+    print STDERR "add_sample_sequence: Unknown sample-id\n";
+    return -4;
+  }
+
+  my $p_name = fetch_plate_name($pid);
+  if ( ! $p_name ) {
+    print STDERR "add_sample_sequence: Unknown plate-id\n";
+    return -5;
+  }
+  
+  my $ssid = fetch_sample_sequence_id( $name );
+  return $ssid if ( $ssid );
+     
+  my %call_hash = ( sid  => $sid,
+		    pid  => $pid,
+		    name => $name);
+
+  return (EASIH::DB::insert($dbi, "sample_sequence", \%call_hash));
+}
+
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub fetch_sample_sequence_id {
+  my ( $name ) = @_;
+  if ( ! $name ) { 
+    print STDERR "fetch_sample_sequence_id: No sample_sequence name provided\n";
+    return -1;
+  }
+  my $q    = "SELECT pid FROM sample_sequence WHERE name = ?";
+  my $sth  = EASIH::DB::prepare($dbi, $q);
+  my @line = EASIH::DB::fetch_array( $dbi, $sth, $name );
+  return $line[0] || undef;
+}
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub fetch_sample_sequence_name {
+  my ( $ssid ) = @_;
+
+  if ( ! $ssid ) { 
+    print STDERR "fetch_sample_sequence_name: No sample_sequence id provided\n";
+    return "";
+  }
+
+  my $q    = "SELECT name FROM sample_sequence WHERE pid = ?";
+  my $sth  = EASIH::DB::prepare($dbi, $q);
+  my @line = EASIH::DB::fetch_array( $dbi, $sth, $ssid );
+  return $line[0] || undef;
+}
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub fetch_sample_sequence_hash {
+  my ( $ssid ) = @_;
+  if ( ! $ssid ) { 
+    print STDERR "fetch_sample_sequence_hash: No sample_sequence id provided\n";
+    return {};
+  }
+  my $q    = "SELECT * FROM sample_sequence WHERE ssid = ?";
+  my $sth  = EASIH::DB::prepare($dbi, $q);
+  return( EASIH::DB::fetch_hash( $dbi, $sth, $ssid ));
+}
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub update_sample_sequence {
+  my ($ssid, $name) = @_;
+
+  if ( ! $ssid ) { 
+    print STDERR "update_sample_sequence: No sample sequence id provided\n";
+    return -1;
+  }
+
+  if ( ! $name ) { 
+    print STDERR "update_sample_sequence: No name provided\n";
+    return -1;
+  }
+
+  my %call_hash;
+  $call_hash{ssid}       = $ssid if ($ssid);
+  $call_hash{name}       = $name if ($name);
+
+  return (EASIH::DB::update($dbi, "sample_sequence", \%call_hash, "ssid"));
+}
+
+
 
 1;

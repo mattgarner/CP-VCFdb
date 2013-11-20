@@ -23,7 +23,7 @@ CREATE TABLE sample_sequence (
   ssid                INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   sid                 INT NOT NULL,
   pid                 INT NOT NULL,
-  name                VARCHAR(8) NOT NULL ,
+  name                VARCHAR(80) NOT NULL ,
 
   KEY sid_idx  (sid),
   KEY pid_idx  (pid)

@@ -35,13 +35,13 @@ CREATE TABLE variant (
   vid                 INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   chr                 VARCHAR(8) NOT NULL ,
   start               INT NOT NULL,
-  stop                INT NOT NULL,
+  end                 INT NOT NULL,
   ref                 VARCHAR(100) NOT NULL ,
   alt                 VARCHAR(100) NOT NULL ,
   comment	      VARCHAR(200),
   annotation	      VARCHAR(500),
 
-  KEY pos_idx  (chr, start, stop)
+  KEY pos_idx  (chr, start, end)
 );
 
 
@@ -50,10 +50,10 @@ CREATE TABLE region (
   rid                 INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   chr                 VARCHAR(8) NOT NULL ,
   start               INT NOT NULL,
-  stop                INT NOT NULL,
+  end                 INT NOT NULL,
   name                VARCHAR(100) NOT NULL ,
 
-  KEY pos_idx  (chr, start, stop)
+  KEY pos_idx  (chr, start, end)
 );
 
 CREATE TABLE coverage (

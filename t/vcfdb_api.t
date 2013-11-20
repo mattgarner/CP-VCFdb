@@ -47,7 +47,7 @@ my $dbhost = 'mgsrv01';
 my $rand_dbname = "VCFdb_test";
 print "Database name :: $rand_dbname\n";
 
-use Test::More tests => 37;
+use Test::More tests => 41;
 
 open( *STDERR, ">/dev/null");
 
@@ -173,5 +173,58 @@ ok($$ss_hash{ssid} == 1 &&
    $$ss_hash{sid} == 1 &&
    $$ss_hash{pid} == 1 &&
    $$ss_hash{name} eq $ss_name, "fetched and checked sample sequence hash by sample_sequence id");
+
+
+# ====================== REGION ===============================
+
+my $r_name  = "BRCA2_exon2";
+my $r_chr   = 13;
+my $r_start = 32890598;
+my $r_end   = 32890664;
+
+my $rid = CTRU::VCFdb::add_region();
+ok($rid == -1, "Check for provided chr when inserting a region");
+
+$rid = CTRU::VCFdb::add_region($r_chr, );
+ok($rid == -2, "Check for provided start when inserting a region");
+
+$rid = CTRU::VCFdb::add_region($r_chr, $r_start );
+ok($rid == -3, "Check for provided end when inserting a region");
+
+$rid = CTRU::VCFdb::add_region($r_chr, $r_start, $r_end);
+ok($rid == -4, "Check for provided name when inserting a region");
+
+$rid = CTRU::VCFdb::add_region($r_chr, $r_start, $r_end, $r_name);
+ok($rid == 1, "Check for add a region with correct parameters");
+my $r_hash = CTRU::VCFdb::fetch_region_hash($rid);
+ok($$r_hash{rid}   == $rid &&
+   $$r_hash{name}  eq "BRCA2_exon2" &&
+   $$r_hash{chr}   == 13 &&
+   $$r_hash{start} == 32890598 &&
+   $$r_hash{end}   == 32890664, "fetched and checked region hash by region id (added data)");
+
+my $f_rid = CTRU::VCFdb::fetch_region_id_by_name(  );
+ok($f_rid == -1, "fetch region name by id, with no id ");
+
+$f_rid = CTRU::VCFdb::fetch_region_id_by_name( $r_name );
+ok($rid eq $f_rid, "fetch region name by id, with an id");
+
+$r_chr   = 14;
+$r_start = 32899213;
+$r_end   = 32899321;
+$r_name  = "BRCA2_exon3";
+
+$f_rid = CTRU::VCFdb::update_region( $rid, $r_chr, $r_start, $r_end, $r_name  );
+ok($rid eq $f_rid, "update region, persistent id");
+
+$r_hash = CTRU::VCFdb::fetch_region_hash();
+ok(!keys %$r_hash, "fetched region hash by region id, with no id");
+
+$r_hash = CTRU::VCFdb::fetch_region_hash($rid);
+ok($$r_hash{rid}   == $rid &&
+   $$r_hash{name}  eq "BRCA2_exon3" &&
+   $$r_hash{chr}   == 14 &&
+   $$r_hash{start} == 32899213 &&
+   $$r_hash{end}   == 32899321, "fetched and checked region hash by region id (updated data)");
 
 

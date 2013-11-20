@@ -301,5 +301,101 @@ sub update_sample_sequence {
 }
 
 
+#================== region functions =========================
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub add_region {
+  my ($chr, $start, $end, $name) = @_;
+
+  if ( ! $chr ) { 
+    print STDERR "add_region: No chr provided\n";
+    return -1;
+  }
+
+  if ( ! $start ) { 
+    print STDERR "add_region: No region start provided\n";
+    return -2;
+  }
+
+  if ( ! $end ) { 
+    print STDERR "add_region: No region end provided\n";
+    return -3;
+  }
+
+  if ( ! $name ) { 
+    print STDERR "add_region: No region name provided\n";
+    return -4;
+  }
+  
+  my $rid = fetch_region_id_by_name( $name );
+  return $rid if ( $rid );
+     
+  my %call_hash = ( chr   => $chr,
+		    start => $start,
+		    end   => $end,
+		    name  => $name);
+
+  return (EASIH::DB::insert($dbi, "region", \%call_hash));
+}
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub fetch_region_id_by_name {
+  my ( $name ) = @_;
+
+  if ( ! $name ) { 
+    print STDERR "fetch_region_id: No region name provided\n";
+    return -1;
+  }
+  my $q    = "SELECT rid FROM region WHERE name = ?";
+  my $sth  = EASIH::DB::prepare($dbi, $q);
+  my @line = EASIH::DB::fetch_array( $dbi, $sth, $name );
+  return $line[0] || undef;
+}
+
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub fetch_region_hash {
+  my ( $rid ) = @_;
+  if ( ! $rid ) { 
+    print STDERR "fetch_region_hash: No region id provided\n";
+    return {};
+  }
+  my $q    = "SELECT * FROM region WHERE rid = ?";
+  my $sth  = EASIH::DB::prepare($dbi, $q);
+  return( EASIH::DB::fetch_hash( $dbi, $sth, $rid ));
+}
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub update_region {
+  my ($rid, $chr, $start, $end, $name) = @_;
+
+  if ( ! $rid ) { 
+    print STDERR "update_region: No sample sequence id provided\n";
+    return -1;
+  }
+
+  my %call_hash;
+  $call_hash{rid}       = $rid   if ($rid);
+  $call_hash{chr}       = $chr   if ($chr);
+  $call_hash{start}     = $start if ($start);
+  $call_hash{end}       = $end   if ($end);
+  $call_hash{name}      = $name  if ($name);
+
+  return (EASIH::DB::update($dbi, "region", \%call_hash, "rid"));
+}
+
+
 
 1;

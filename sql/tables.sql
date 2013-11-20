@@ -74,13 +74,14 @@ CREATE TABLE coverage (
 
 
 
-CREATE TABLE sample_variants (
+CREATE TABLE sample_variant (
 
   ssid                INT NOT NULL,
   vid                 INT NOT NULL,
 
   depth		      INT,  
   AAF		      FLOAT,  
+  quality	      FLOAT,  
 
   KEY ssid_idx  (ssid),
   KEY vid_idx  (vid)

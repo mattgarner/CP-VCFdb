@@ -270,7 +270,12 @@ sub insert {
 
 
 sub update {
-  my ($dbi, $table, $hash_ref, $condition_key)  = @_;
+  my ($dbi, $table, $hash_ref, @condition_keys)  = @_;
+
+  my %condition_keys;
+  my @conditions;
+  map { $condition_keys{ $_ } = 1;
+  push @conditions, "$_='$$hash_ref{$_}'";} @condition_keys;
 
   my %columns;
   map { $columns{$_} = 1 } get_column_names( $dbi, $table);
@@ -285,12 +290,12 @@ sub update {
       return undef;
     }
     # one should not meddle with the id's since it ruins the system
-    next if ($key eq $condition_key);
+    next if ( $condition_key{ $key });
     push @parts, "$key = '$$hash_ref{$key}'";
   }
 
   # collect and make sure we update the right table.
-  $s .= join (', ', @parts) ." WHERE $condition_key ='$$hash_ref{ $condition_key }'";
+  $s .= join (', ', @parts) ." WHERE " . join(" AND ", @conditions;
 
 
   print "$s\n";

@@ -292,6 +292,9 @@ sub update {
   # collect and make sure we update the right table.
   $s .= join (', ', @parts) ." WHERE $condition_key ='$$hash_ref{ $condition_key }'";
 
+
+  print "$s\n";
+
   my $sth = $dbi->prepare($s);
   $sth->execute  || die $DBI::errstr;;
 

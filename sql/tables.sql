@@ -58,7 +58,7 @@ CREATE TABLE region (
 CREATE TABLE coverage (
 
 #  cid                 INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  sid                 INT NOT NULL,
+  ssid                INT NOT NULL,
   rid                 INT NOT NULL,
 
   min		      FLOAT,  
@@ -67,7 +67,7 @@ CREATE TABLE coverage (
   lows		      VARCHAR(300),
   missing	      VARCHAR(300),
 
-  KEY sid_idx  (sid),
+  KEY ssid_idx  (ssid),
   KEY rid_idx  (rid)
 );
 

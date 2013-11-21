@@ -680,7 +680,6 @@ sub add_coverage {
     print STDERR "add_coverage: Unknown region-id: $rid\n";
     return -9;
   }
-
   
   my $c_hash = fetch_coverage_hash( $ssid, $rid );
   return 1 if ( $c_hash && keys %{$c_hash} > 0 );
@@ -718,44 +717,40 @@ sub fetch_coverage_hash {
 # 
 # Kim Brugger (20 Nov 2013)
 sub update_coverage {
-  my ($ssid, $rid, $depth, $AAF, $quality) = @_;
+  my ($ssid, $rid, $min, $mean, $max, $lows, $missing) = @_;
+
 
 
   if ( ! $ssid ) { 
-    print STDERR "add_coverage: No sample_sequence id prorided\n";
+    print STDERR "add_coverage: No sample_sequence id provided\n";
     return -1;
   }
 
   if ( ! $rid ) { 
-    print STDERR "add_coverage: No variant id prorided\n";
+    print STDERR "add_coverage: No region id provided\n";
     return -2;
   }
 
-  my $ss_name = fetch_sample_sequence_name($ssid);
+  my $ss_name = fetch_sample_sequence_name( $ssid );
   if ( ! $ss_name  ) {
-    print STDERR "add_coverage: Unknown sequence_sample-id $ssid $ss_name\n";
+    print STDERR "add_coverage: Unknown sequence_sample-id: $ssid\n";
     return -3;
   }
 
-  my $v_hash = fetch_variant_hash($rid);
-  if ( ! $v_hash || keys %{$v_hash} == 0) {
-    print STDERR "add_coverage: Unknown variant-id $rid $v_hash\n";
+  my $r_hash = fetch_region_hash( $rid );
+  if ( ! $r_hash || keys %{$r_hash} == 0) {
+    print STDERR "add_coverage: Unknown region-id: $rid\n";
     return -4;
   }
-
-  my $sv_hash = fetch_coverage_hash( $ssid, $rid );
-  if ( !$sv_hash || keys %{$sv_hash} == 0 ) {
-    print "update_coverage: unknown entry\n";
-    return -5;
-  }
-
-
+  
   my %call_hash;
-  $call_hash{ssid}       = $ssid    if ( $ssid    );
-  $call_hash{rid}        = $rid     if ( $rid     );
-  $call_hash{depth}      = $depth   if ( $depth   );
-  $call_hash{AAF}        = $AAF     if ( $AAF     );
-  $call_hash{quality}    = $quality if ( $quality );
+  $call_hash{ ssid }     = $ssid    if ( $ssid            );
+  $call_hash{ rid  }     = $rid     if ( $rid             );
+  $call_hash{ min  }     = $min     if ( $min             );
+  $call_hash{ mean }     = $mean    if ( $mean            );
+  $call_hash{ max }      = $max     if ( $max             );
+  $call_hash{ lows  }    = $lows    if ( defined $lows    );
+  $call_hash{ missing }  = $missing if ( defined $missing );
 
   return (EASIH::DB::update($dbi, "coverage", \%call_hash, "ssid", "rid"));
 }

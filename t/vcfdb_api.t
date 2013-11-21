@@ -356,3 +356,73 @@ ok($$sv_hash{ssid}    == $ssid &&
    $$sv_hash{quality} eq $sv_quality, "fetched and checked sample-variant hash by sample-variant id (updated data)");
 
 
+
+# ====================== COVERAGE ===============================
+
+my $c_min     = 9;
+my $c_mean    = 99;
+my $c_max     = 999;
+my $c_lows    = 'c.456-459';
+my $c_missing = 'c.1456-1459';
+
+my $cid = CTRU::VCFdb::add_coverage();
+ok($srid == -1, "Check for provided sample-sequence id when inserting a sample-variant");
+
+$cid = CTRU::VCFdb::add_coverage($ssid);
+ok($cid == -2, "Check for provided coverage id when inserting a coverage");
+
+$cid = CTRU::VCFdb::add_coverage($ssid, $rid);
+ok($cid == -3, "Check for provided min depth when inserting a coverage");
+
+$cid = CTRU::VCFdb::add_coverage($ssid, $rid, $c_min);
+ok($cid == -4, "Check for provided mean depth when inserting a coverage");
+
+$cid = CTRU::VCFdb::add_coverage($ssid, $rid, $c_min, $c_mean);
+ok($cid == -5, "Check for provided max depth when inserting a coverage");
+
+$cid = CTRU::VCFdb::add_coverage($ssid, $rid, $c_min, $c_mean, $c_max);
+ok($cid == -6, "Check for provided sample-variant id when inserting a coverage");
+
+$cid = CTRU::VCFdb::add_coverage($ssid, $rid, $c_min, $c_mean, $c_max, $c_lows);
+ok($cid == -7, "Check for provided misssing coverages when inserting a coverage");
+
+
+$cid = CTRU::VCFdb::add_coverage(99, $rid, $c_min, $c_mean, $c_max, $c_lows, $c_missing);
+ok($cid == -100, "Check for using  a valid sample_sequence id while adding a coverage entry");
+
+$cid = CTRU::VCFdb::add_coverage($ssid, 99, $c_min, $c_mean, $c_max, $c_lows, $c_missing);
+ok($cid == -100, "Check for using  a valid region id while adding a coverage entry");
+
+$cid = CTRU::VCFdb::add_coverage($ssid, $rid, $c_min, $c_mean, $c_max, $c_lows, $c_missing);
+ok($cid == -100, "Check for add a sample-variant with correct parameters");
+
+my $sv_hash = CTRU::VCFdb::fetch_coverage_hash($ssid, $rid);
+
+ok($$sv_hash{ssid}    == $ssid &&
+   $$sv_hash{rid}     == $rid &&
+   $$sv_hash{depth}   eq $sv_depth &&
+   $$sv_hash{AAF}     eq $sv_AAF &&
+   $$sv_hash{quality} eq $sv_quality, "fetched and checked sample-variant hash by sample-variant id (added data)");
+
+my $sv_hash = CTRU::VCFdb::fetch_coverage_hash();
+ok(!keys %$sv_hash, "fetched sample-variant hash by sample-variant id, with no sequence-sample id");
+
+my $sv_hash = CTRU::VCFdb::fetch_coverage_hash($ssid);
+ok(!keys %$sv_hash, "fetched sample-variant hash by sample-variant id, with no variant id");
+
+$sv_depth   = 999;
+$sv_AAF     = 0.11;
+$sv_quality = 11;
+
+
+$f_rid = CTRU::VCFdb::update_coverage($ssid, $rid, $sv_depth, $sv_AAF, $sv_quality);
+ok($rid eq $f_rid, "update sample-variant, persistent id");
+
+$sv_hash = CTRU::VCFdb::fetch_coverage_hash($ssid, $rid);
+ok($$sv_hash{ssid}    == $ssid &&
+   $$sv_hash{rid}     == $rid &&
+   $$sv_hash{depth}   eq $sv_depth &&
+   $$sv_hash{AAF}     eq $sv_AAF &&
+   $$sv_hash{quality} eq $sv_quality, "fetched and checked sample-variant hash by sample-variant id (updated data)");
+
+

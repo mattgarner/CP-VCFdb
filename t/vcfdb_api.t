@@ -87,8 +87,8 @@ $f_sample_id = CTRU::VCFdb::fetch_sample_id( $sample_name );
 ok($sid eq $f_sample_id, "fetch sample id by sample name");
 
 $sample_name = "C010002";
-$f_sample_id = CTRU::VCFdb::update_sample( $sid, $sample_name );
-ok($sid eq $f_sample_id, "update sample, persistent id");
+my $success = CTRU::VCFdb::update_sample( $sid, $sample_name );
+ok($success, "update sample");
 
 $f_sample_name = CTRU::VCFdb::fetch_sample_name( $f_sample_id );
 ok($sample_name eq $f_sample_name, "fetched updated sample name by sample id");
@@ -117,8 +117,8 @@ $f_plate_id = CTRU::VCFdb::fetch_plate_id( $plate_name );
 ok($pid eq $f_plate_id, "fetch plate id by plate name");
 
 $plate_name = "CP0002";
-$f_plate_id = CTRU::VCFdb::update_plate( $pid, $plate_name );
-ok($pid eq $f_plate_id, "update plate, persistent id");
+$success = CTRU::VCFdb::update_plate( $pid, $plate_name );
+ok($success, "update plate");
 
 $f_plate_name = CTRU::VCFdb::fetch_plate_name( $f_plate_id );
 ok($plate_name eq $f_plate_name, "fetched updated plate name by plate id");
@@ -159,8 +159,8 @@ $f_ssid = CTRU::VCFdb::fetch_sample_sequence_id( $ss_name );
 ok($f_ssid == $ssid, "fetch sample sequence id by name, with an id");
 
 $ss_name = "C010001_ABC";
-$f_ssid = CTRU::VCFdb::update_sample_sequence( $ssid, $ss_name );
-ok($ssid eq $f_ssid, "update sample_sequence, persistent id");
+$success = CTRU::VCFdb::update_sample_sequence( $ssid, $ss_name );
+ok($success, "update sample_sequence");
 
 $f_ss_name = CTRU::VCFdb::fetch_sample_sequence_name( $ssid );
 ok($ss_name eq $f_ss_name, "fetched updated sample sequence  name by sample_sequence id");
@@ -214,8 +214,8 @@ $r_start = 32899213;
 $r_end   = 32899321;
 $r_name  = "BRCA2_exon3";
 
-$f_rid = CTRU::VCFdb::update_region( $rid, $r_chr, $r_start, $r_end, $r_name  );
-ok($rid eq $f_rid, "update region, persistent id");
+$success = CTRU::VCFdb::update_region( $rid, $r_chr, $r_start, $r_end, $r_name  );
+ok($success, "update region");
 
 $r_hash = CTRU::VCFdb::fetch_region_hash();
 ok(!keys %$r_hash, "fetched region hash by region id, with no id");
@@ -285,8 +285,8 @@ $v_comment   = "Pathogenic";
 $v_annotation = "BRCA1 mutation!";
 
 
-$f_vid = CTRU::VCFdb::update_variant($vid, $v_chr, $v_pos, $v_ref, $v_alt, $v_comment, $v_annotation);
-ok($vid eq $f_vid, "update variant, persistent id");
+$success = CTRU::VCFdb::update_variant($vid, $v_chr, $v_pos, $v_ref, $v_alt, $v_comment, $v_annotation);
+ok($success, "update variant");
 
 $v_hash = CTRU::VCFdb::fetch_variant_hash();
 ok(!keys %$v_hash, "fetched variant hash by variant id, with no id");
@@ -345,8 +345,8 @@ $sv_AAF     = 0.11;
 $sv_quality = 11;
 
 
-$f_vid = CTRU::VCFdb::update_sample_variant($ssid, $vid, $sv_depth, $sv_AAF, $sv_quality);
-ok($vid eq $f_vid, "update sample-variant, persistent id");
+$success = CTRU::VCFdb::update_sample_variant($ssid, $vid, $sv_depth, $sv_AAF, $sv_quality);
+ok($success, "update sample-variant, persistent id");
 
 $sv_hash = CTRU::VCFdb::fetch_sample_variant_hash($ssid, $vid);
 ok($$sv_hash{ssid}    == $ssid &&
@@ -418,13 +418,11 @@ $c_lows    = '';
 $c_missing = '';
 
 
-$f_rid = CTRU::VCFdb::update_coverage($ssid, $rid, $c_min, $c_mean, $c_max, $c_lows, $c_missing);
-ok($rid eq $f_rid, "update coverage, persistent id");
+$success = CTRU::VCFdb::update_coverage($ssid, $rid, $c_min, $c_mean, $c_max, $c_lows, $c_missing);
+ok($success, "update coverage");
 
 
 $c_hash = CTRU::VCFdb::fetch_coverage_hash($ssid, $rid);
-print Dumper( $c_hash );
-
 ok($$c_hash{ssid}    == $ssid &&
    $$c_hash{rid}     == $rid &&
    $$c_hash{min}     == $c_min &&

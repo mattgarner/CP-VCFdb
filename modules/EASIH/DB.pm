@@ -297,9 +297,6 @@ sub update {
   # collect and make sure we update the right table.
   $s .= join (', ', @parts) ." WHERE " . join(" AND ", @conditions);
 
-
-  print "$s\n";
-
   my $sth = $dbi->prepare($s);
   $sth->execute  || die $DBI::errstr;;
 

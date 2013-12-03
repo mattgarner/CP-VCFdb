@@ -237,7 +237,7 @@ sub fetch_sample_sequence_id {
     print STDERR "fetch_sample_sequence_id: No sample_sequence name provided\n";
     return -1;
   }
-  my $q    = "SELECT pid FROM sample_sequence WHERE name = ?";
+  my $q    = "SELECT ssid FROM sample_sequence WHERE name = ?";
   my $sth  = EASIH::DB::prepare($dbi, $q);
   my @line = EASIH::DB::fetch_array( $dbi, $sth, $name );
   return $line[0] || undef;
@@ -255,7 +255,7 @@ sub fetch_sample_sequence_name {
     return "";
   }
 
-  my $q    = "SELECT name FROM sample_sequence WHERE pid = ?";
+  my $q    = "SELECT name FROM sample_sequence WHERE ssid = ?";
   my $sth  = EASIH::DB::prepare($dbi, $q);
   my @line = EASIH::DB::fetch_array( $dbi, $sth, $ssid );
   return $line[0] || undef;
@@ -536,7 +536,7 @@ sub add_sample_variant {
 
   my $ss_name = fetch_sample_sequence_name($ssid);
   if ( ! $ss_name  ) {
-    print STDERR "add_sample_variant: Unknown sequence_sample-id $ssid $ss_name\n";
+    print STDERR "add_sample_variant: Unknown sequence_sample-id $ssid '$ss_name'\n";
     return -6;
   }
 
@@ -643,27 +643,27 @@ sub add_coverage {
     return -2;
   }
 
-  if ( ! $min ) { 
+  if ( ! defined $min ) { 
     print STDERR "add_coverage: No min depth provided\n";
     return -3;
   }
 
-  if ( ! $mean ) { 
+  if ( ! defined  $mean ) { 
     print STDERR "add_coverage: No mean depth provided\n";
     return -4;
   }
 
-  if ( ! $max ) { 
+  if ( ! defined  $max ) { 
     print STDERR "add_coverage: No max depth provided\n";
     return -5;
   }
 
-  if ( ! $lows ) { 
+  if ( ! defined $lows ) { 
     print STDERR "add_coverage: No low regions provided\n";
     return -6;
   }
 
-  if ( ! $missing ) { 
+  if ( ! defined $missing ) { 
     print STDERR "add_coverage: No missing regions provided\n";
     return -7;
   }

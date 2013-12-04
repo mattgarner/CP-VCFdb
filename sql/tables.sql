@@ -1,3 +1,7 @@
+drop database VCFdb;
+create database VCFdb;
+use VCFdb;
+
 
 CREATE TABLE plate (
   pid                 INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -23,7 +27,11 @@ CREATE TABLE sample_sequence (
   ssid                INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   sid                 INT NOT NULL,
   pid                 INT NOT NULL,
-  name                VARCHAR(80) NOT NULL ,
+  name                VARCHAR(80) NOT NULL,
+  total_reads	      INT,
+  mapped_reads	      INT,
+  duplicate_reads     INT,
+  mean_isize	      float,
 
   KEY sid_idx  (sid),
   KEY pid_idx  (pid)
@@ -51,8 +59,11 @@ CREATE TABLE region (
   start               INT NOT NULL,
   end                 INT NOT NULL,
   name                VARCHAR(100) NOT NULL ,
+  reference	      VARCHAR(100) NOT NULL,
 
-  KEY pos_idx  (chr, start, end)
+  KEY pos_idx  (chr, start, end),
+  KEY ref_idx (reference),
+  KEY name_idx (name)
 );
 
 CREATE TABLE coverage (

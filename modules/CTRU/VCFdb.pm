@@ -227,6 +227,30 @@ sub add_sample_sequence {
 }
 
 
+
+# 
+# 
+# 
+# Kim Brugger (3 Dec 2013)
+sub add_sample_sequence_stats {
+  my ($ssid, $total_reads, $mapped_reads, $duplicate_reads, $mean_isize, ) = @_;
+
+  my $ss_name = fetch_sample_sequence_name($ssid);
+  if ( ! $ss_name  ) {
+    print STDERR "add_sample_variant: Unknown sequence_sample-id $ssid '$ss_name'\n";
+    return -6;
+  }
+     
+  my %call_hash = ( ssid => $ssid);
+  $call_hash{ total_reads }     = $total_reads     if ( $total_reads );
+  $call_hash{ mapped_reads }    = $mapped_reads    if ( $mapped_reads );
+  $call_hash{ duplicate_reads } = $duplicate_reads if ( $duplicate_reads );
+  $call_hash{ mean_isize }      = $mean_isize      if ( $mean_isize );
+
+  return (EASIH::DB::update($dbi, "sample_sequence", \%call_hash, "ssid"));
+}
+
+
 # 
 # 
 # 
@@ -281,7 +305,8 @@ sub fetch_sample_sequence_hash {
 # 
 # Kim Brugger (20 Nov 2013)
 sub update_sample_sequence {
-  my ($ssid, $name) = @_;
+  my ($ssid, $name, $total_reads, $mapped_reads, $duplicate_reads, $mean_isize, ) = @_;
+
 
   if ( ! $ssid ) { 
     print STDERR "update_sample_sequence: No sample sequence id provided\n";
@@ -294,9 +319,12 @@ sub update_sample_sequence {
   }
 
   my %call_hash;
-  $call_hash{ssid}       = $ssid if ($ssid);
-  $call_hash{name}       = $name if ($name);
-
+  $call_hash{ssid}              = $ssid;
+  $call_hash{name}              = $name            if ($name);
+  $call_hash{ total_reads }     = $total_reads     if ( $total_reads );
+  $call_hash{ mapped_reads }    = $mapped_reads    if ( $mapped_reads );
+  $call_hash{ duplicate_reads } = $duplicate_reads if ( $duplicate_reads );
+  $call_hash{ mean_isize }      = $mean_isize      if ( $mean_isize );
   return (EASIH::DB::update($dbi, "sample_sequence", \%call_hash, "ssid"));
 }
 
@@ -308,7 +336,7 @@ sub update_sample_sequence {
 # 
 # Kim Brugger (20 Nov 2013)
 sub add_region {
-  my ($chr, $start, $end, $name) = @_;
+  my ($chr, $start, $end, $name, $reference) = @_;
 
   if ( ! $chr ) { 
     print STDERR "add_region: No chr provided\n";
@@ -329,14 +357,20 @@ sub add_region {
     print STDERR "add_region: No region name provided\n";
     return -4;
   }
+
+  if ( ! $name ) { 
+    print STDERR "add_region: No reference provided\n";
+    return -5;
+  }
   
   my $rid = fetch_region_id_by_name( $name );
   return $rid if ( $rid );
      
-  my %call_hash = ( chr   => $chr,
-		    start => $start,
-		    end   => $end,
-		    name  => $name);
+  my %call_hash = ( chr       => $chr,
+		    start     => $start,
+		    end       => $end,
+		    name      => $name,
+		    reference => $reference);
 
   return (EASIH::DB::insert($dbi, "region", \%call_hash));
 }
@@ -379,7 +413,7 @@ sub fetch_region_hash {
 # 
 # Kim Brugger (20 Nov 2013)
 sub update_region {
-  my ($rid, $chr, $start, $end, $name) = @_;
+  my ($rid, $chr, $start, $end, $name, $reference) = @_;
 
   if ( ! $rid ) { 
     print STDERR "update_region: No sample sequence id provided\n";
@@ -392,6 +426,7 @@ sub update_region {
   $call_hash{start}     = $start if ($start);
   $call_hash{end}       = $end   if ($end);
   $call_hash{name}      = $name  if ($name);
+  $call_hash{reference} = $name  if ($reference);
 
   return (EASIH::DB::update($dbi, "region", \%call_hash, "rid"));
 }

@@ -18,7 +18,10 @@ use Vcf;
 use Getopt::Std;
 
 my $infile = shift || usage();
+$infile =~ s/^\.\///;
 $infile =~ s/\..*//;
+#print "$infile \n";
+#exit;
 my $cwd      = `pwd`;
 chomp($cwd);
 
@@ -39,7 +42,7 @@ print " $sample_name => $sample_sequence_name, $plate_name\n";
 
 my $sid = CTRU::VCFdb::add_sample( $sample_name );
 my $pid = CTRU::VCFdb::add_plate( $plate_name );
-my $ssid = CTRU::VCFdb::add_sample_sequence( $sid, $pid, $sample_name );
+my $ssid = CTRU::VCFdb::add_sample_sequence( $sid, $pid, $sample_sequence_name );
 
 readin_vcf("$infile.vcf");
 readin_csv("$infile.var.csv");
@@ -56,7 +59,7 @@ sub readin_stats {
   my %res;
   open (my $in, $flagstat_file) || die "Could not open '$flagstat_file': $!\n";
   while(<$in>) {
-    print;
+#    print;
     if ( /(\d+) .*total/) {
       $res{total_reads} = $1;
     }
@@ -123,7 +126,7 @@ sub readin_csv {
     s/#  capture: //;
     my ($name, $min, $max, $mean, $lows, $missing, $transcript) = split("\t");
     
-    print "  my ($name, $min, $max, $mean, $lows, $missing, $transcript) = \n";
+#    print "  my ($name, $min, $max, $mean, $lows, $missing, $transcript) = \n";
 
     my $rid = CTRU::VCFdb::fetch_region_id_by_name( $name );
     
@@ -133,6 +136,7 @@ sub readin_csv {
     }
     
     my $cid = CTRU::VCFdb::add_coverage($ssid, $rid, $min, $mean, $max, $lows, $missing);
+    print "CID : $cid\n";
   }
 
   
@@ -157,15 +161,20 @@ sub readin_vcf {
   
   while (my $entry = $vcf->next_data_hash()) {
   
-    foreach my $alt ( @{$$entry{ ALT}}) {
-      my $vid = CTRU::VCFdb::add_variant($$entry{CHROM}, $$entry{POS}, $$entry{REF}, $alt);
+    my $alt = join(",", @{$$entry{ ALT}});
 
-      print "VID :: $vid\n";
+    my $vid = CTRU::VCFdb::add_variant($$entry{CHROM}, $$entry{POS}, $$entry{REF}, $alt);
 
-      my ($ref_freq, $alt_freq) = split(",", $$entry{gtypes}{$sample_sequence_name}{AD});
-      my $AAF = $alt_freq/($ref_freq+$alt_freq);
-      CTRU::VCFdb::add_sample_variant($ssid, $vid, $$entry{gtypes}{$sample_sequence_name}{DP}, $AAF, $$entry{QUAL});
+#    print "VID :: $vid\n";
+#    print STDERR Dumper( $entry);
 
-    }
+    my ($ref_freq, @alt_freqs) = split(",", $$entry{gtypes}{$sample_sequence_name}{AD});
+
+    my @AAFs;
+    my $AAFs = join(",", map { sprintf("%.4f", $_/($ref_freq+$_)) } @alt_freqs);
+
+    print "$alt -- $AAFs \n";
+
+    CTRU::VCFdb::add_sample_variant($ssid, $vid, $$entry{gtypes}{$sample_sequence_name}{DP}, $AAFs, $$entry{QUAL});
   }
 }

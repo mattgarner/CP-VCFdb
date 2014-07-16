@@ -89,6 +89,25 @@ sub fetch_sample_name {
 # 
 # 
 # Kim Brugger (20 Nov 2013)
+sub fetch_sample_ids_by_test {
+  my ( $test ) = @_;
+
+  if ( ! $test ) { 
+    print STDERR "fetch_sample_ids_by_test: No test provided\n";
+    return [];
+  }
+
+  my $q    = "SELECT sid FROM sample WHERE name like ?";
+  my $sth  = EASIH::DB::prepare($dbi, $q);
+  return EASIH::DB::fetch_array_hash( $dbi, $sth, "$test%");
+}
+
+
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
 sub update_sample {
   my ($sid, $name) = @_;
 
@@ -336,7 +355,7 @@ sub update_sample_sequence {
 # 
 # Kim Brugger (20 Nov 2013)
 sub add_region {
-  my ($chr, $start, $end, $name, $reference) = @_;
+  my ($chr, $start, $end, $name, $reference, $checked) = @_;
 
   if ( ! $chr ) { 
     print STDERR "add_region: No chr provided\n";
@@ -364,13 +383,25 @@ sub add_region {
   }
   
   my $rid = fetch_region_id_by_name( $name );
-  return $rid if ( $rid );
+  if ( $rid ) {
+    my $rhash = fetch_region_hash( $rid );
+    if ( $$rhash{ chr   }     == $chr &&
+	 $$rhash{ start }     == $start &&
+	 $$rhash{ end   }     == $end ) {
+      return $rid if ( $$rhash{ name  }     eq $name &&
+		       $$rhash{ reference } eq $reference );
+      return update_region($chr, $start, $end, $name, $reference);
+    }
+  }
+
      
   my %call_hash = ( chr       => $chr,
 		    start     => $start,
 		    end       => $end,
 		    name      => $name,
 		    reference => $reference);
+
+  $call_hash{ checked } = $checked if ( defined $checked );
 
   return (EASIH::DB::insert($dbi, "region", \%call_hash));
 }
@@ -397,6 +428,42 @@ sub fetch_region_id_by_name {
 # 
 # 
 # Kim Brugger (20 Nov 2013)
+sub fetch_regions_by_gene {
+  my ( $gene ) = @_;
+
+  if ( ! $gene ) { 
+    print STDERR "fetch_region_by_gene: No gene name provided\n";
+    return -1;
+  }
+  my $q    = "SELECT * FROM region WHERE name like ?";
+  my $sth  = EASIH::DB::prepare($dbi, $q);
+  return EASIH::DB::fetch_array_hash( $dbi, $sth, "$gene%" );
+}
+
+
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub fetch_region_id_by_position {
+  my ( $chr, $pos ) = @_;
+
+  if ( ! $chr || !$pos) { 
+    print STDERR "fetch_region_id_by_position: No chromosome or position provided\n";
+    return -1;
+  }
+  my $q    = "SELECT rid FROM region WHERE chr = ? AND start <= ? and end  >= ?";
+  my $sth  = EASIH::DB::prepare($dbi, $q);
+  my @line = EASIH::DB::fetch_array( $dbi, $sth, $chr, $pos, $pos );
+  return $line[0] || undef;
+}
+
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
 sub fetch_region_hash {
   my ( $rid ) = @_;
   if ( ! $rid ) { 
@@ -408,12 +475,45 @@ sub fetch_region_hash {
   return( EASIH::DB::fetch_hash( $dbi, $sth, $rid ));
 }
 
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub fetch_regions {
+  my $q    = "SELECT * FROM region";
+  my $sth  = EASIH::DB::prepare($dbi, $q);
+  return( EASIH::DB::fetch_array_hash( $dbi, $sth ));
+}
+
+
+
+# 
+# 
+# 
+# Kim Brugger (13 Dec 2013)
+sub delete_region_n_coverages {
+  my ($rid) = @_;
+
+  my $q    = "DELETE FROM region where rid= ?";
+  my $sth  = EASIH::DB::prepare($dbi, $q);
+  EASIH::DB::do( $dbi, $sth, $rid );
+
+  $q    = "DELETE FROM coverage where rid= ?";
+  $sth  = EASIH::DB::prepare($dbi, $q);
+  EASIH::DB::do( $dbi, $sth, $rid );
+
+  
+  
+}
+
+
 # 
 # 
 # 
 # Kim Brugger (20 Nov 2013)
 sub update_region {
-  my ($rid, $chr, $start, $end, $name, $reference) = @_;
+  my ($rid, $chr, $start, $end, $name, $reference, $checked) = @_;
 
   if ( ! $rid ) { 
     print STDERR "update_region: No sample sequence id provided\n";
@@ -421,12 +521,13 @@ sub update_region {
   }
 
   my %call_hash;
-  $call_hash{rid}       = $rid   if ($rid);
-  $call_hash{chr}       = $chr   if ($chr);
-  $call_hash{start}     = $start if ($start);
-  $call_hash{end}       = $end   if ($end);
-  $call_hash{name}      = $name  if ($name);
-  $call_hash{reference} = $name  if ($reference);
+  $call_hash{rid}       = $rid       if ($rid);
+  $call_hash{chr}       = $chr       if ($chr);
+  $call_hash{start}     = $start     if ($start);
+  $call_hash{end}       = $end       if ($end);
+  $call_hash{name}      = $name      if ($name);
+  $call_hash{checked}   = $checked   if ($checked);
+  $call_hash{reference} = $reference if ($reference);
 
   return (EASIH::DB::update($dbi, "region", \%call_hash, "rid"));
 }
@@ -493,6 +594,38 @@ sub fetch_variant_id {
   my @line = EASIH::DB::fetch_array( $dbi, $sth, $chr, $pos, $ref, $alt );
   return $line[0] || undef;
 }
+
+
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub fetch_variant_id_by_position {
+  my ( $chr, $pos) = @_;
+
+  if ( ! $chr || !$pos ) { 
+    print STDERR "fetch_variant_id: requires 2 paramters: chr and pos\n";
+    return -1;
+  }
+
+  my $q    = "SELECT vid FROM variant WHERE chr = ? AND pos = ?";
+  my $sth  = EASIH::DB::prepare($dbi, $q);
+  return EASIH::DB::fetch_array_array( $dbi, $sth, $chr, $pos);
+}
+
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub fetch_variants {
+
+  my $q    = "SELECT * FROM variant";
+  my $sth  = EASIH::DB::prepare($dbi, $q);
+  return (EASIH::DB::fetch_array_hash( $dbi, $sth));
+}
+
 
 
 # 
@@ -610,6 +743,22 @@ sub fetch_sample_variant_hash {
   my $sth  = EASIH::DB::prepare($dbi, $q);
   return( EASIH::DB::fetch_hash( $dbi, $sth, $ssid, $vid ));
 }
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub fetch_sample_variants {
+  my ($vid ) = @_;
+  if ( ! $vid ) { 
+    print STDERR "fetch_sample_variant_hash: No variant and/or sample-sequence id provided\n";
+    return {};
+  }
+  my $q    = "SELECT * FROM sample_variant WHERE vid = ?";
+  my $sth  = EASIH::DB::prepare($dbi, $q);
+  return( EASIH::DB::fetch_array_hash( $dbi, $sth, $vid ));
+}
+
 
 # 
 # 
@@ -747,6 +896,23 @@ sub fetch_coverage_hash {
   return( EASIH::DB::fetch_hash( $dbi, $sth, $ssid, $rid ));
 }
 
+
+# 
+# 
+# 
+# Kim Brugger (20 Nov 2013)
+sub fetch_coverages_by_rid {
+  my ($rid ) = @_;
+  if ( ! $rid ) { 
+    print STDERR "fetch_coverages_by_rid: No region id prorided\n";
+    return {};
+  }
+
+  my $q    = "SELECT * FROM coverage WHERE rid = ?";
+  my $sth  = EASIH::DB::prepare($dbi, $q);
+  return( EASIH::DB::fetch_array_hash( $dbi, $sth, $rid ));
+}
+
 # 
 # 
 # 
@@ -790,6 +956,27 @@ sub update_coverage {
   return (EASIH::DB::update($dbi, "coverage", \%call_hash, "ssid", "rid"));
 }
 
+
+
+#================== Complex functions =========================
+
+
+# 
+# 
+# 
+# Kim Brugger (05 Dec 2013)
+sub variants_from_test {
+  my ( $test ) = @_;
+
+  if ( ! $test ) { 
+    print STDERR "variants_from_test: No test prorided\n";
+    return {};
+  }
+
+  my $q    = "SELECT vid FROM sample s, sample_sequence ss, sample_variant sv WHERE s.name LIKE ? AND ss.sid = s.sid AND ss.ssid = sv.ssid GROUP BY vid;";
+  my $sth  = EASIH::DB::prepare($dbi, $q);
+  return( EASIH::DB::fetch_array_hash( $dbi, $sth, "$test%" ));
+}
 
 
 1;

@@ -80,7 +80,7 @@ sub print_gene_performance {
 #  print "$$exon{'name'}:::  @min_depth \n";
     
     if (! @min_depth) {
-      printf("$$exon{name}\t0\n");
+      printf("$$exon{chr}:$$exon{start}-$$exon{end}\t$$exon{name}\tNo-Data\n");
     }
     else {
       my( $intercept, $slope) = linear_regression(\@reads, \@min_depth);

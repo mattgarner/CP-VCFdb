@@ -377,7 +377,7 @@ sub add_region {
     return -4;
   }
 
-  if ( ! $name ) { 
+  if ( ! $reference ) { 
     print STDERR "add_region: No reference provided\n";
     return -5;
   }
